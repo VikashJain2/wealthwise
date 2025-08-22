@@ -1,0 +1,264 @@
+openapi: 3.0.3
+info:
+  title: WealthWise Finance Tracker API
+  description: API documentation for WealthWise personal finance tracker backend.
+  version: 1.0.0
+servers:
+  - url: http://localhost:3000
+    description: Local server
+
+tags:
+  - name: Auth
+    description: User authentication
+  - name: Transactions
+    description: Manage income and expense transactions
+  - name: Analytics
+    description: Financial analytics and summaries
+
+paths:
+  /api/auth/register:
+    post:
+      tags: [Auth]
+      summary: Register a new user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password, role]
+              properties:
+                email:
+                  type: string
+                  example: user@example.com
+                password:
+                  type: string
+                  example: password123
+                role:
+                  type: string
+                  enum: [user, admin, read-only]
+                  example: user
+      responses:
+        '200':
+          description: User registered successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  message: { type: string }
+                  user:
+                    type: object
+                    properties:
+                      id: { type: integer }
+                      email: { type: string }
+                      role: { type: string }
+                  token: { type: string }
+
+  /api/auth/login:
+    post:
+      tags: [Auth]
+      summary: Login user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email:
+                  type: string
+                  example: user@example.com
+                password:
+                  type: string
+                  example: password123
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  message: { type: string }
+                  user:
+                    type: object
+                    properties:
+                      id: { type: integer }
+                      email: { type: string }
+                      role: { type: string }
+                  token: { type: string }
+
+  /api/auth/logout:
+    put:
+      tags: [Auth]
+      summary: Logout user
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Logout successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  message: { type: string }
+
+  /api/transactions:
+    get:
+      tags: [Transactions]
+      summary: Get transactions (paginated, filterable)
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: page
+          schema: { type: integer, default: 1 }
+        - in: query
+          name: limit
+          schema: { type: integer, default: 10 }
+        - in: query
+          name: category
+          schema: { type: string }
+        - in: query
+          name: type
+          schema: { type: string, enum: [income, expense] }
+        - in: query
+          name: startDate
+          schema: { type: string, format: date }
+        - in: query
+          name: endDate
+          schema: { type: string, format: date }
+      responses:
+        '200':
+          description: List of transactions
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  transactions:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Transaction'
+                  pagination:
+                    type: object
+                    properties:
+                      page: { type: integer }
+                      limit: { type: integer }
+                      total: { type: integer }
+                      totalPages: { type: integer }
+
+    post:
+      tags: [Transactions]
+      summary: Add a new transaction
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TransactionInput'
+      responses:
+        '200':
+          description: Transaction added
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  msg: { type: string }
+                  transaction:
+                    $ref: '#/components/schemas/Transaction'
+
+  /api/transactions/{id}:
+    delete:
+      tags: [Transactions]
+      summary: Delete a transaction by ID
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      responses:
+        '200':
+          description: Transaction deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  msg: { type: string }
+
+  /api/analytics:
+    get:
+      tags: [Analytics]
+      summary: Get analytics summary
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Analytics summary
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  summary:
+                    type: object
+                    properties:
+                      income: { type: number }
+                      expenses: { type: number }
+                      balance: { type: number }
+                  byCategory:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        category: { type: string }
+                        total: { type: number }
+                        type: { type: string }
+                  monthlyTrends:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        month: { type: string }
+                        type: { type: string }
+                        total: { type: number }
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    Transaction:
+      type: object
+      properties:
+        id: { type: integer }
+        user_id: { type: integer }
+        amount: { type: number }
+        category: { type: string }
+        type: { type: string, enum: [income, expense] }
+        date: { type: string, format: date }
+        description: { type: string }
+
+    TransactionInput:
+      type: object
+      required: [amount, category, type, date]
+      properties:
+        amount: { type: number, example: 1000 }
+        category: { type: string, example: Salary }
+        type: { type: string, enum: [income, expense], example: income }
+        date: { type: string, format: date, example: 2024-06-
