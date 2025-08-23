@@ -109,9 +109,10 @@ const editTransaction = async (req, res) => {
       return res.status(403).json({ msg: "Not authorized" });
     }
 
+    const MySQLDate = new Date(date).toISOString().slice(0, 19).replace('T', ' ');
     await pool.query(
       "UPDATE transactions SET amount = ?, category = ?, type = ?, date = ?, description = ? WHERE id = ?",
-      [amount, category, type, date, description, id]
+      [amount, category, type, MySQLDate, description, id]
     );
 
     // Invalidate cache
