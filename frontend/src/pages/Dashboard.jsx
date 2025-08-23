@@ -279,7 +279,7 @@ const Dashboard = () => {
         </div>
 
         <div>
-          <TransactionList />
+          <TransactionList fetchAnalytics={fetchAnalytics}/>
         </div>
       </div>
     </div>

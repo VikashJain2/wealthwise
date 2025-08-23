@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 
-const TransactionList = () => {
+const TransactionList = ({fetchAnalytics}) => {
   const [transactions, setTransactions] = useState([]);
   const [pagination, setPagination] = useState({});
   const [filters, setFilters] = useState({
@@ -59,6 +59,7 @@ const TransactionList = () => {
       await axios.delete(`${import.meta.env.VITE_BACKEND_URL}/api/transactions/${id}`, {withCredentials:true});
       // Refresh the transactions list
       fetchTransactions();
+      fetchAnalytics()
     } catch (err) {
       setError(err.response?.data?.msg || 'Error deleting transaction');
     } finally {

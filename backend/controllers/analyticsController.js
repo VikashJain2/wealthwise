@@ -11,7 +11,6 @@ const getAnalytics = async (req, res) => {
       return res.json(JSON.parse(cachedData));
     }
 
-    console.log("Fetching analytics for user:", req.user.id);
     // Get expenses by category
     const [categoryData] = await pool.query(
       `SELECT category, SUM(amount) as total, type 
@@ -37,7 +36,6 @@ const getAnalytics = async (req, res) => {
       [req.user.id]
     );
 
-    console.log("Monthly Data:", monthlyData);
 
     // Get total income and expenses
     const [totals] = await pool.query(
@@ -50,7 +48,6 @@ const getAnalytics = async (req, res) => {
       [req.user.id]
     );
 
-    console.log("Totals Data:", totals);
     // Calculate balance
     const income = totals.find(t => t.type === 'income')?.total || 0;
     const expenses = totals.find(t => t.type === 'expense')?.total || 0;
